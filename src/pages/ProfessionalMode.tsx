@@ -1,175 +1,171 @@
-import { useState } from 'react';
-import { TextArea } from '../components/ui/TextArea';
-import { Input } from '../components/ui/Input';
-import { Button } from '../components/ui/Button';
-import { Card, CardContent } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
-import { ModelSelector } from '../components/ModelSelector';
-import { useApp } from '../contexts/AppContext';
-import { useModel } from '../contexts/ModelContext';
-import { generateMockAnalysis } from '../utils/mockAnalysis';
-import { analyzeWithAI } from '../services/aiService';
-import { AnalysisResult, AIModelConfig } from '../types';
-import { FileText, Link as LinkIcon, Upload, Download, Share2, AlertCircle } from 'lucide-react';
-import { AVAILABLE_MODELS } from '../config/aiModels';
-
 // src/pages/ProfessionalMode.tsx
-export default function ProfessionalMode() {
-  return <div className="p-8 text-2xl">Professional Mode: Deep analysis with sources.</div>;
+import { useState } from 'react';
+import { useModel } from '../contexts/ModelContext';
+
+interface AnalysisResult {
+  score: number;
+  verdict: 'bullshit' | 'mostly true' | 'neutral';
+  explanation: string;
+  sources?: { title: string; url: string }[];
 }
 
-export function ProfessionalMode() {
-  const { setCurrentAnalysis, isAnalyzing, setIsAnalyzing } = useApp();
-  const { configs, selectedModelId } = useModel();
+export default function ProfessionalMode() {
+  const [input, setInput] = useState('');
   const [result, setResult] = useState<AnalysisResult | null>(null);
-  const [activeTab, setActiveTab] = useState<'text' | 'url' | 'batch'>('text');
-  const [text, setText] = useState('');
-  const [url, setUrl] = useState('');
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleAnalyze = async () => {
-    setError('');
-    if (activeTab === 'text' && (!text.trim() || text.trim().length < 10)) {
-      setError('Please enter at least 10 characters');
-      return;
-    }
-    if (activeTab === 'url' && !url.trim()) {
-      setError('Please enter a URL');
-      return;
-    }
+  const { apiKey, model } = useModel();
 
-    setIsAnalyzing(true);
+  const analyze = async () => {
+    if (!input.trim()) return;
+
+    setLoading(true);
     setResult(null);
 
+    if (!apiKey) {
+      setResult({
+        score: 0,
+        verdict: 'neutral',
+        explanation: 'Please add your xAI API key in Settings to enable real analysis.',
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
-      let config: AIModelConfig | null = null;
-      const selectedModel = AVAILABLE_MODELS.find(m => m.id === selectedModelId);
+      const response = await fetch('https://api.x.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: 'system',
+              content: `You are a professional fact-checker. Analyze the claim for accuracy, bias, and evidence.
+              Respond **only** with valid JSON:
+              {
+                "score": 0.0-1.0,
+                "verdict": "bullshit" | "mostly true" | "neutral",
+                "explanation": "Detailed 2-3 sentence analysis",
+                "sources": [{"title": "Source Name", "url": "https://..."}]
+              }
+              No markdown, no extra text.`,
+            },
+            { role: 'user', content: input },
+          ],
+          max_tokens: 300,
+          temperature: 0.1,
+        }),
+      });
 
-      if (selectedModel) {
-        const providerConfig = configs[selectedModel.provider];
-        if (providerConfig?.enabled && providerConfig?.apiKey) {
-          config = providerConfig;
-        }
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+      const data = await response.json();
+      const content = data.choices[0].message.content.trim();
+
+      let parsed: AnalysisResult;
+      try {
+        parsed = JSON.parse(content);
+      } catch {
+        throw new Error('Invalid JSON from model');
       }
 
-      const content = activeTab === 'text' ? text : url;
-      let analysis: AnalysisResult;
-
-      if (config) {
-        analysis = await analyzeWithAI(content, config, false);
-      } else {
-        await new Promise(resolve => setTimeout(resolve, 2500));
-        analysis = generateMockAnalysis(content);
-      }
-
-      setResult(analysis);
-      setCurrentAnalysis(analysis);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Analysis failed');
+      setResult(parsed);
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      setResult({
+        score: 0,
+        verdict: 'neutral',
+        explanation: `Analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}.`,
+      });
     } finally {
-      setIsAnalyzing(false);
+      setLoading(false);
     }
   };
 
-  const tabs = [
-    { id: 'text' as const, label: 'Text', icon: FileText },
-    { id: 'url' as const, label: 'URL', icon: LinkIcon },
-    { id: 'batch' as const, label: 'Batch', icon: Upload },
-  ];
-
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Professional Dashboard</h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">Advanced analysis tools</p>
-        </div>
+    <div className="container mx-auto p-6 max-w-5xl">
+      <h1 className="text-3xl font-bold mb-2">Professional Mode</h1>
+      <p className="text-gray-600 dark:text-gray-400 mb-6">
+        In-depth fact-checking with sources and citations.
+      </p>
+
+      <div className="space-y-6">
+        <textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="e.g., The government spent $10 trillion on climate research last year..."
+          className="w-full h-40 p-4 border rounded-lg resize-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-700"
+          disabled={loading}
+        />
+
+        <button
+          onClick={analyze}
+          disabled={loading || !input.trim()}
+          className="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+        >
+          {loading ? (
+            <>
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25" />
+                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
+              </svg>
+              Analyzing with Grok...
+            </>
+          ) : (
+            'Fact-Check Claim'
+          )}
+        </button>
+
         {result && (
-          <div className="flex gap-2">
-            <Button variant="secondary"><Share2 className="w-4 h-4 mr-2" />Share</Button>
-            <Button variant="secondary"><Download className="w-4 h-4 mr-2" />Export</Button>
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border shadow-sm">
+            <div className="flex items-center gap-4 mb-4">
+              <span className="text-2xl font-bold">
+                {result.verdict === 'bullshit' ? 'Bullshit' : result.verdict === 'mostly true' ? 'Mostly True' : 'Neutral'}
+              </span>
+              <div className="flex-1 h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all ${
+                    result.score > 0.7 ? 'bg-red-500' : result.score > 0.4 ? 'bg-yellow-500' : 'bg-green-500'
+                  }`}
+                  style={{ width: `${result.score * 100}%` }}
+                />
+              </div>
+              <span className="text-sm font-medium">{(result.score * 100).toFixed(0)}%</span>
+            </div>
+
+            <p className="text-gray-700 dark:text-gray-300 mb-4">{result.explanation}</p>
+
+            {result.sources && result.sources.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-2">Sources:</h3>
+                <ul className="space-y-2">
+                  {result.sources.map((src, i) => (
+                    <li key={i}>
+                      <a
+                        href={src.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-600 hover:underline text-sm"
+                      >
+                        {src.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button key={tab.id} onClick={() => { setActiveTab(tab.id); setError(''); }}
-                  className={`flex items-center gap-2 px-4 py-3 border-b-2 ${activeTab === tab.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 dark:text-gray-400'}`}>
-                  <Icon className="w-4 h-4" />
-                  <span className="font-medium">{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="space-y-4">
-            {activeTab === 'text' && (
-              <TextArea value={text} onChange={(e) => { setText(e.target.value); if (error) setError(''); }}
-                placeholder="Enter text for analysis..." rows={8} error={error} disabled={isAnalyzing} />
-            )}
-
-            {activeTab === 'url' && (
-              <Input type="url" value={url} onChange={(e) => { setUrl(e.target.value); if (error) setError(''); }}
-                placeholder="https://example.com/article" error={error} disabled={isAnalyzing} />
-            )}
-
-            {activeTab === 'batch' && (
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-                <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600 dark:text-gray-400">Feature coming soon</p>
-              </div>
-            )}
-
-            {Object.values(configs).some(c => c.enabled && c.apiKey) && activeTab !== 'batch' && (
-              <ModelSelector />
-            )}
-
-            {!Object.values(configs).some(c => c.enabled && c.apiKey) && activeTab !== 'batch' && (
-              <div className="flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                  No AI model configured. Using mock data for demo. Configure an AI provider in Settings to use real analysis.
-                </p>
-              </div>
-            )}
-
-            <div className="flex justify-end pt-4">
-              <Button onClick={handleAnalyze} size="lg" isLoading={isAnalyzing} disabled={activeTab === 'batch'}>
-                Run Analysis
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {isAnalyzing && (
-        <div className="flex flex-col items-center py-12 space-y-4">
-          <div className="w-16 h-16 border-4 border-gray-200 dark:border-gray-700 border-t-blue-600 rounded-full animate-spin" />
-          <p className="text-gray-900 dark:text-gray-100 font-medium">Running analysis...</p>
-        </div>
-      )}
-
-      {result && !isAnalyzing && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Verdict: {result.verdict.toUpperCase().replace('-', ' ')}</h3>
-                {result.modelUsed && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Analyzed by {result.modelUsed}</p>
-                )}
-              </div>
-              <Badge variant={result.verdict}>{result.confidence}% Confidence</Badge>
-            </div>
-            <p className="text-gray-700 dark:text-gray-300 text-lg">{result.summary}</p>
-          </CardContent>
-        </Card>
-      )}
+      <div className="mt-8 text-sm text-gray-500 dark:text-gray-400">
+        Using model: <strong>{model === 'grok-3' ? 'Grok 3' : 'Grok 4'}</strong>
+        {apiKey ? ' | API Key Connected' : ' | Add API Key in Settings'}
+      </div>
     </div>
   );
 }
