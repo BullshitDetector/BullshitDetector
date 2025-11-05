@@ -1,5 +1,5 @@
 // src/contexts/ModelContext.tsx
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 type Model = 'grok-3' | 'grok-4';
 
@@ -15,9 +15,25 @@ interface ModelContextType {
 const ModelContext = createContext<ModelContextType | undefined>(undefined);
 
 export function ModelProvider({ children }: { children: ReactNode }) {
+  // Load API key from localStorage on mount
+  const [apiKey, setApiKeyState] = useState(() => {
+    return localStorage.getItem('xai-api-key') || '';
+  });
+
   const [model, setModel] = useState<Model>('grok-3');
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('xai-api-key') || '');
   const [isValidKey, setIsValidKey] = useState<boolean | null>(null);
+
+  // Save API key to localStorage whenever it changes
+  const setApiKey = (key: string) => {
+    const trimmed = key.trim();
+    setApiKeyState(trimmed);
+    if (trimmed) {
+      localStorage.setItem('xai-api-key', trimmed);
+    } else {
+      localStorage.removeItem('xai-api-key');
+    }
+    setIsValidKey(null); // Reset validation
+  };
 
   const testApiKey = async () => {
     if (!apiKey) {
@@ -34,14 +50,13 @@ export function ModelProvider({ children }: { children: ReactNode }) {
         },
         body: JSON.stringify({
           model,
-          messages: [{ role: 'user', content: 'Say hello' }],
+          messages: [{ role: 'user', content: 'Hello' }],
           max_tokens: 5,
         }),
       });
 
       if (response.ok) {
         setIsValidKey(true);
-        localStorage.setItem('xai-api-key', apiKey);
       } else {
         setIsValidKey(false);
       }
