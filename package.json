@@ -10,11 +10,15 @@
     "test": "vitest"
   },
   "dependencies": {
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.552.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.5.0",
+    "@testing-library/react": "^16.0.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
@@ -23,8 +27,6 @@
     "tailwindcss": "^3.4.13",
     "typescript": "^5.5.4",
     "vite": "^5.4.8",
-    "vitest": "^2.1.2",
-    "@testing-library/react": "^16.0.0",
-    "@testing-library/jest-dom": "^6.5.0"
+    "vitest": "^2.1.2"
   }
 }
