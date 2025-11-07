@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
 
 export default function SplashPage() {
   const [email, setEmail] = useState('');
@@ -11,9 +10,8 @@ export default function SplashPage() {
   const [step, setStep] = useState<'login' | 'otp'>('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // New: Show/hide password state
 
-  const { login, verifyOTP } = useAuth();
+  const { login, verifyOTP, resendOTP } = useAuth(); // Added resendOTP
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -52,6 +50,19 @@ export default function SplashPage() {
     }
   };
 
+  const handleResendOTP = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await resendOTP(email);
+      setError('New OTP sent to your email.');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-8">
@@ -75,22 +86,13 @@ export default function SplashPage() {
               placeholder="Email"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:border-gray-600"
             />
-            <div className="relative mb-4">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:border-gray-600"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-              >
-                {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
-              </button>
-            </div>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:border-gray-600"
+            />
             <button
               onClick={handleLogin}
               disabled={loading}
@@ -117,6 +119,13 @@ export default function SplashPage() {
               className="w-full py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 disabled:opacity-50 transition-colors"
             >
               {loading ? 'Verifying...' : 'Verify OTP'}
+            </button>
+            <button
+              onClick={handleResendOTP}
+              disabled={loading}
+              className="w-full mt-2 py-2 text-sm text-purple-600 hover:underline disabled:opacity-50"
+            >
+              {loading ? 'Resending...' : 'Resend OTP'}
             </button>
             <button
               onClick={() => setStep('login')}
