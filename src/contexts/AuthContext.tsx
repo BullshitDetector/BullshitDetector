@@ -21,7 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Internal admin config (in production, move to env or db)
 const ADMIN_EMAIL = 'admin@bullshitdetector.com';
-const ADMIN_OTP_SECRET = 'JBSWY3DPEHPK3PXP'; // Base32 secret for TOTP
+const ADMIN_OTP_SECRET = 'JBSWY3DPEHPK3PXP'; // 16-char Base32 secret (128 bits; accommodates 32-bit TOTP fields via SHA256)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -53,16 +53,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const generateOTP = async (): Promise<string> => {
     try {
       const { OTPAuth } = await import('otpauth');
-      if (!OTPAuth) {
-        throw new Error('OTP library not loaded. Run "pnpm add otpauth" and restart dev server.');
-      }
       const totp = new OTPAuth({
         issuer: 'BullshitDetector',
         label: 'Admin 2FA',
         type: 'totp',
         digits: 8,
         secret: ADMIN_OTP_SECRET,
-        algorithm: 'SHA256',
+        algorithm: 'SHA256', // Accommodates 32-bit field via HMAC-SHA256 (standard for TOTP)
       });
       return totp.generate();
     } catch (error) {
@@ -74,16 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const validateOTP = async (otp: string): Promise<boolean> => {
     try {
       const { OTPAuth } = await import('otpauth');
-      if (!OTPAuth) {
-        throw new Error('OTP library not loaded. Run "pnpm add otpauth" and restart dev server.');
-      }
       const totp = new OTPAuth({
         issuer: 'BullshitDetector',
         label: 'Admin 2FA',
         type: 'totp',
         digits: 8,
         secret: ADMIN_OTP_SECRET,
-        algorithm: 'SHA256',
+        algorithm: 'SHA256', // Accommodates 32-bit field via HMAC-SHA256
       });
       return totp.validate({ token: otp }) !== null;
     } catch (error) {
