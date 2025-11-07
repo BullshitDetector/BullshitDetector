@@ -1,26 +1,16 @@
 // src/contexts/AuthContext.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '../lib/supabase';
-import { sendEmail } from '../lib/smtp';
 
 interface User {
-  id: string;
   email: string;
   isAdmin: boolean;
   mode: 'voter' | 'professional';
-}
-
-interface OTP {
-  code: string;
-  expires: number;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  verifyOTP: (otp: string) => Promise<void>;
-  resendOTP: (email: string) => Promise<void>; // Explicitly exported
   logout: () => Promise<void>;
   isValidUser: (email: string, password: string) => boolean;
 }
@@ -34,15 +24,13 @@ const SUPER_ADMIN_PASSWORD = 'superpass123';
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [otp, setOTP] = useState<OTP | null>(null);
 
   useEffect(() => {
     // Load session from localStorage
     const saved = localStorage.getItem('auth-session');
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
-        setUser(parsed);
+        setUser(JSON.parse(saved));
       } catch {}
     }
     setLoading(false);
@@ -64,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<void> => {
     if (isValidUser(email, password)) {
-      // Super admin — skip OTP
+      // Super admin — bypass OTP completely
       const userData: User = {
         id: 'super-admin-id',
         email,
@@ -136,32 +124,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const resendOTP = async (email: string): Promise<void> => {
-    if (!email) throw new Error('Email required for resend.');
-
-    // Generate new OTP
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit
-    const otpObj: OTP = {
-      code: otpCode,
-      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
-    };
-    setOTP(otpObj);
-
-    // Save new OTP to Supabase
-    await supabase.from('otp_codes').upsert({
-      user_id: (await supabase.auth.getUser()).data.user?.id || '',
-      code: otpCode,
-      expires_at: otpObj.expires,
-    });
-
-    // Send new email
-    await sendEmail(email, 'Your New OTP Code', `Your new 6-digit OTP code is: ${otpCode}\n\nIt expires in 5 minutes.\n\nIf you didn't request this, ignore this email.`);
-
-    // Update temp session with new OTP
-    const tempUser = user || { id: '', email, isAdmin: false, mode: 'voter' };
-    saveSession(tempUser);
-  };
-
   const logout = async (): Promise<void> => {
     clearSession();
     await supabase.auth.signOut();
@@ -198,7 +160,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       login,
       verifyOTP,
-      resendOTP,
       logout,
     }}>
       {children}
