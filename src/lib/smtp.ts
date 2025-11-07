@@ -1,5 +1,5 @@
 // src/lib/smtp.ts
-import { supabase } from './supabase';
+import nodemailer from 'nodemailer';
 
 interface SMTPConfig {
   host: string;
@@ -9,36 +9,41 @@ interface SMTPConfig {
   secure: boolean;
 }
 
-export async function getSMTPConfig(): Promise<SMTPConfig | null> {
-  const { data } = await supabase.from('smtp_config').select('*').single();
-  return data || null;
+const config: SMTPConfig = {
+  host: process.env.SMTP_HOST || 'smtp.r3alm.com',
+  port: parseInt(process.env.SMTP_PORT || '465'),
+  username: process.env.SMTP_USERNAME || 'no-reply@r3alm.com',
+  password: process.env.SMTP_PASSWORD || 'Z3us!@#$1r3alm',
+  secure: process.env.SMTP_SECURE === 'true',
+};
+
+if (!config.username || !config.password) {
+  console.warn('SMTP config incomplete. Email sending disabled. Set SMTP_USERNAME and SMTP_PASSWORD in .env.');
 }
 
-export async function saveSMTPConfig(config: SMTPConfig) {
-  const { error } = await supabase.from('smtp_config').upsert(config).select();
-  if (error) throw error;
-}
+export async function sendEmail(to: string, subject: string, text: string, from?: string) {
+  if (!config.username || !config.password) {
+    throw new Error('SMTP config not set. Check .env for SMTP_USERNAME and SMTP_PASSWORD.');
+  }
 
-export async function sendOTP(email: string, code: string) {
-  const smtpConfig = await getSMTPConfig();
-  if (!smtpConfig) throw new Error('SMTP config not set. Admin must configure in /admin-config.');
-
-  // Dynamic import nodemailer to avoid bundling issues
-  const nodemailer = await import('nodemailer');
   const transporter = nodemailer.createTransport({
-    host: smtpConfig.host,
-    port: smtpConfig.port,
-    secure: smtpConfig.secure,
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
     auth: {
-      user: smtpConfig.username,
-      pass: smtpConfig.password,
+      user: config.username,
+      pass: config.password,
     },
   });
 
-  await transporter.sendMail({
-    from: `"Bullshit Detector" <noreply@bullshitdetector.com>`,
-    to: email,
-    subject: 'Your OTP Code',
-    text: `Your 6-digit OTP code is: ${code}\n\nIt expires in 5 minutes.\n\nIf you didn't request this, ignore this email.`,
-  });
+  const mailOptions = {
+    from: from || `"Bullshit Detector" <${config.username}>`,
+    to,
+    subject,
+    text,
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  console.log('Email sent:', info.messageId);
+  return info;
 }

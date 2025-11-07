@@ -1,7 +1,10 @@
 // src/contexts/AuthContext.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '../lib/supabase';
+import { sendEmail } from '../lib/smtp'; // New: Import SMTP sender
 
 interface User {
+  id: string;
   email: string;
   isAdmin: boolean;
   mode: 'voter' | 'professional';
@@ -17,7 +20,6 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   verifyOTP: (otp: string) => Promise<void>;
-  resendOTP: (email: string) => Promise<void>; // New: Resend OTP function
   logout: () => Promise<void>;
   isValidUser: (email: string, password: string) => boolean;
 }
@@ -28,7 +30,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const SUPER_ADMIN_EMAIL = 'admin@r3alm.com';
 const SUPER_ADMIN_PASSWORD = 'superpass123';
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthContextProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [otp, setOTP] = useState<OTP | null>(null);
@@ -93,8 +95,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       expires_at: otpObj.expires,
     });
 
-    // Send email (integrate with SMTP from AdminConfig)
-    await sendOTP(email, otpCode); // Function defined in smtp.ts
+    // Send email using SMTP (no Supabase dependency for sending)
+    await sendEmail(
+      email,
+      'Your OTP Code',
+      `Your 6-digit OTP code is: ${otpCode}\n\nIt expires in 5 minutes.\n\nIf you didn't request this, ignore this email.`
+    );
 
     // Set temp session (await OTP verification)
     saveSession({
@@ -133,60 +139,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const resendOTP = async (email: string): Promise<void> => {
-    if (!email) throw new Error('Email required for resend.');
-
-    // Generate new OTP
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit
-    const otpObj: OTP = {
-      code: otpCode,
-      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
-    };
-    setOTP(otpObj);
-
-    // Save new OTP to Supabase
-    await supabase.from('otp_codes').upsert({
-      user_id: (await supabase.auth.getUser()).data.user?.id || '',
-      code: otpCode,
-      expires_at: otpObj.expires,
-    });
-
-    // Send new email
-    await sendOTP(email, otpCode);
-
-    // Update temp session with new OTP
-    const tempUser = user || { id: '', email, isAdmin: false, mode: 'voter' };
-    saveSession(tempUser);
-  };
-
   const logout = async (): Promise<void> => {
     clearSession();
     await supabase.auth.signOut();
-  };
-
-  const sendOTP = async (email: string, code: string) => {
-    // Fetch SMTP config from Supabase
-    const { data: smtpConfig } = await supabase.from('smtp_config').select('*').single();
-    if (!smtpConfig) throw new Error('SMTP config not set. Admin must configure in /admin-config.');
-
-    // Dynamic import nodemailer to avoid bundling issues
-    const nodemailer = await import('nodemailer');
-    const transporter = nodemailer.createTransporter({
-      host: smtpConfig.host,
-      port: smtpConfig.port,
-      secure: smtpConfig.secure,
-      auth: {
-        user: smtpConfig.username,
-        pass: smtpConfig.password,
-      },
-    });
-
-    await transporter.sendMail({
-      from: `"Bullshit Detector" <noreply@bullshitdetector.com>`,
-      to: email,
-      subject: 'Your New OTP Code',
-      text: `Your new 6-digit OTP code is: ${code}\n\nIt expires in 5 minutes.\n\nIf you didn't request this, ignore this email.`,
-    });
   };
 
   return (
@@ -195,7 +150,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       login,
       verifyOTP,
-      resendOTP,
       logout,
     }}>
       {children}

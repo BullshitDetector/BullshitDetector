@@ -11,9 +11,9 @@ export default function SplashPage() {
   const [step, setStep] = useState<'login' | 'otp'>('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // State for password visibility
+  const [showPassword, setShowPassword] = useState(false); // State for show/hide password icon
 
-  const { login, verifyOTP } = useAuth();
+  const { login, verifyOTP, resendOTP } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -45,6 +45,19 @@ export default function SplashPage() {
     try {
       await verifyOTP(otp);
       navigate('/');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await resendOTP(email);
+      setError('New OTP sent to your email.'); // Success message
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -117,6 +130,13 @@ export default function SplashPage() {
               className="w-full py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 disabled:opacity-50 transition-colors"
             >
               {loading ? 'Verifying...' : 'Verify OTP'}
+            </button>
+            <button
+              onClick={handleResendOTP}
+              disabled={loading}
+              className="w-full mt-2 py-2 text-sm text-purple-600 hover:underline disabled:opacity-50"
+            >
+              {loading ? 'Resending...' : 'Resend OTP'}
             </button>
             <button
               onClick={() => setStep('login')}
