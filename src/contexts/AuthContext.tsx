@@ -1,7 +1,9 @@
 // src/contexts/AuthContext.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '../lib/supabase'; // Added: Import supabase client
 
 interface User {
+  id: string;
   email: string;
   isAdmin: boolean;
   mode: 'voter' | 'professional';
@@ -24,7 +26,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Demo super admin (hardcoded for quick access; in prod, use Supabase users table)
-const SUPER_ADMIN_EMAIL = 'super@r3alm.com';
+const SUPER_ADMIN_EMAIL = 'super@bullshitdetector.com';
 const SUPER_ADMIN_PASSWORD = 'superpass123';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -60,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<void> => {
     if (isValidUser(email, password)) {
-      // Super admin — Bypass OTP entirely
+      // Super admin — skip OTP
       const userData: User = {
         id: 'super-admin-id',
         email,
@@ -137,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const sendOTP = async (email: string, code: string) => {
+  const clearOTP = async (email: string, code: string) => {
     // Fetch SMTP config from Supabase
     const { data: smtpConfig } = await supabase.from('smtp_config').select('*').single();
     if (!smtpConfig) throw new Error('SMTP config not set. Admin must configure in /admin-config.');
