@@ -2,25 +2,88 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Trash2, AlertCircle } from 'lucide-react';
+import { supabase } from '../lib/supabase'; // Fix: Correct path (../lib/ from pages/)
 import { getHistory, clearHistory, type HistoryItem } from '../lib/history';
 
 export default function HistoryPage() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const loadHistory = () => {
-    setHistory(getHistory().sort((a, b) => b.timestamp - a.timestamp));
+  const loadHistory = async () => {
+    setLoading(true);
+    try {
+      // Local history fallback
+      let rawHistory = getHistory();
+      const localHistory = Array.isArray(rawHistory) ? rawHistory : [];
+      
+      // Supabase sync (user-specific)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: dbHistory, error } = await supabase
+          .from('validation_history')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        if (error) {
+          console.warn('Supabase history fetch failed:', error.message);
+          setHistory(localHistory.sort((a, b) => b.timestamp - a.timestamp));
+        } else if (dbHistory && dbHistory.length > 0) {
+          const syncedHistory = dbHistory.map((item: any) => ({
+            id: item.id,
+            claim: item.claim,
+            verdict: item.verdict,
+            score: item.score,
+            mode: item.mode,
+            timestamp: new Date(item.created_at).getTime(),
+          })) as HistoryItem[];
+          setHistory(syncedHistory);
+        } else {
+          setHistory(localHistory.sort((a, b) => b.timestamp - a.timestamp));
+        }
+      } else {
+        setHistory(localHistory.sort((a, b) => b.timestamp - a.timestamp));
+      }
+    } catch (err) {
+      console.error('History load failed:', err);
+      setHistory([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     loadHistory();
   }, []);
 
-  const deleteAll = () => {
-    clearHistory();
-    setHistory([]);
+  const deleteAll = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { error } = await supabase
+          .from('validation_history')
+          .delete()
+          .eq('user_id', user.id);
+        if (error) console.warn('Supabase delete failed:', error.message);
+      }
+      clearHistory();
+      setHistory([]);
+    } catch (err) {
+      console.error('Delete all failed:', err);
+    }
     setShowDeleteModal(false);
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6 max-w-5xl">
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          <span className="ml-2 text-gray-500">Loading history...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 max-w-5xl">

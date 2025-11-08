@@ -1,151 +1,97 @@
 // src/pages/SplashPage.tsx
-import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { Button } from '../components/ui/button'; // Assume shadcn/ui or Tailwind equiv; fallback to <button>
 
 export default function SplashPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState('');
-  const [step, setStep] = useState<'login' | 'otp'>('login');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // State for show/hide password icon
-
-  const { login, verifyOTP, resendOTP } = useAuth();
   const navigate = useNavigate();
+  const { signIn, loading, error: authError } = useAuth(); // Use context error for fallback
+  const [demoError, setDemoError] = useState<string | null>(null); // Specific demo error state
+  const [retryCount, setRetryCount] = useState(0); // For retry UX
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      setError('Email and password required.');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
+  const handleDemoLogin = async () => {
+    setDemoError(null);
     try {
-      await login(email, password);
-      setStep('otp');
+      await signIn('admin@r3alm.com', 'admin123'); // Repo demo creds
+      navigate('/sentiment', { replace: true });
     } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      const msg = err.message || 'Unknown error';
+      console.error('Demo login failed:', err); // Log for dev
+      setDemoError(msg.includes('Invalid login') ? 'Invalid credentials—check password hash in Supabase.' :
+                    msg.includes('confirm') ? 'Email not confirmed—disable in Auth Settings.' :
+                    msg.includes('network') ? 'Network issue—check connection.' :
+                    `Login failed: ${msg}. Ensure admin@r3alm.com exists with role: 'admin'.`);
+      setRetryCount(prev => prev + 1);
     }
   };
 
-  const handleOTP = async () => {
-    if (!otp) {
-      setError('OTP required.');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    try {
-      await verifyOTP(otp);
-      navigate('/');
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  const handleRetry = () => {
+    setDemoError(null);
+    handleDemoLogin();
   };
 
-  const handleResendOTP = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      await resendOTP(email);
-      setError('New OTP sent to your email.'); // Success message
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleSignUp = () => navigate('/auth?mode=signup');
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Bullshit Detector</h1>
-          <p className="text-gray-600 dark:text-gray-400">Validate claims with AI-powered precision</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="text-center max-w-md w-full">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+          Bullshit Detector
+        </h1>
+        <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
+          Detect spin and nonsense with AI precision.
+        </p>
+        <div className="space-y-4">
+          <Button
+            onClick={handleDemoLogin}
+            disabled={loading}
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 font-semibold rounded-lg transition"
+            aria-label="Login as demo admin for quick access"
+          >
+            {loading ? 'Logging in...' : 'Demo Admin Login (admin@r3alm.com)'}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleSignUp}
+            className="w-full border-2 border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 py-3 font-semibold rounded-lg transition"
+          >
+            Sign Up / Login
+          </Button>
         </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg">
-            {error}
+        {demoError && (
+          <div 
+            role="alert" 
+            aria-live="polite"
+            className="mt-4 p-4 bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm"
+          >
+            <div className="font-medium mb-1">{demoError}</div>
+            {retryCount < 3 && (
+              <button
+                onClick={handleRetry}
+                className="text-red-600 hover:underline text-xs font-medium"
+                aria-label="Retry demo login"
+              >
+                Retry ({3 - retryCount} attempts left)
+              </button>
+            )}
+            {retryCount >= 3 && <div className="text-xs mt-1">Contact support or check console.</div>}
           </div>
         )}
-
-        {step === 'login' ? (
-          <>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:border-gray-600"
-            />
-            <div className="relative mb-4">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:border-gray-600"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
-              >
-                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
-            </div>
-            <button
-              onClick={handleLogin}
-              disabled={loading}
-              className="w-full py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 disabled:opacity-50 transition-colors"
-            >
-              {loading ? 'Logging in...' : 'Login'}
-            </button>
-          </>
-        ) : (
-          <>
-            <p className="text-center text-sm text-gray-600 mb-4">
-              OTP sent to {email}. Check your email.
-            </p>
-            <input
-              type="text"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              placeholder="Enter 6-digit OTP"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:border-gray-600"
-            />
-            <button
-              onClick={handleOTP}
-              disabled={loading}
-              className="w-full py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 disabled:opacity-50 transition-colors"
-            >
-              {loading ? 'Verifying...' : 'Verify OTP'}
-            </button>
-            <button
-              onClick={handleResendOTP}
-              disabled={loading}
-              className="w-full mt-2 py-2 text-sm text-purple-600 hover:underline disabled:opacity-50"
-            >
-              {loading ? 'Resending...' : 'Resend OTP'}
-            </button>
-            <button
-              onClick={() => setStep('login')}
-              className="w-full mt-2 text-sm text-purple-600 hover:underline"
-            >
-              Back to Login
-            </button>
-          </>
+        {authError && !demoError && ( // Fallback for general auth errors
+          <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">{authError}</div>
         )}
+        <p className="text-sm text-gray-500 mt-6">
+          Quick start: Use demo to explore sentiment analysis.
+        </p>
       </div>
     </div>
   );
