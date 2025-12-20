@@ -1,0 +1,454 @@
+{
+  "users": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "email": "admin@bullshitdetector.com",
+      "display_name": "Admin User",
+      "avatar_url": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+      "role": "admin",
+      "mode": "professional",
+      "is_active": true,
+      "created_at": "2024-10-01T08:00:00Z",
+      "last_login_at": "2024-12-20T10:30:00Z"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "email": "editor@bullshitdetector.com",
+      "display_name": "Editor User",
+      "avatar_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+      "role": "editor",
+      "mode": "professional",
+      "is_active": true,
+      "created_at": "2024-10-15T09:30:00Z",
+      "last_login_at": "2024-12-19T14:20:00Z"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "email": "alice.voter@bullshitdetector.com",
+      "display_name": "Alice Johnson",
+      "avatar_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+      "role": "user",
+      "mode": "voter",
+      "is_active": true,
+      "created_at": "2024-11-01T10:00:00Z",
+      "last_login_at": "2024-12-20T09:15:00Z"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440004",
+      "email": "bob.analyst@bullshitdetector.com",
+      "display_name": "Bob Smith",
+      "avatar_url": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+      "role": "user",
+      "mode": "professional",
+      "is_active": true,
+      "created_at": "2024-11-10T14:30:00Z",
+      "last_login_at": "2024-12-18T16:45:00Z"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440005",
+      "email": "carol.inactive@bullshitdetector.com",
+      "display_name": "Carol Davis",
+      "avatar_url": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+      "role": "user",
+      "mode": "voter",
+      "is_active": false,
+      "created_at": "2024-11-20T11:00:00Z",
+      "last_login_at": "2024-12-10T08:20:00Z"
+    }
+  ],
+  "validation_history": [
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440001",
+      "user_id": "550e8400-e29b-41d4-a716-446655440003",
+      "claim": "The Earth is flat",
+      "verdict": "bullshit",
+      "score": 0.98,
+      "confidence": 99,
+      "mode": "voter",
+      "explanation": "Multiple satellite images confirm Earth's spherical shape. Gravity, physics, and centuries of astronomical data support this.",
+      "summary": "Complete scientific consensus contradicts this claim",
+      "key_points": [
+        "Satellite imagery shows spherical shape",
+        "Gravity acts uniformly on curved surface",
+        "Horizon curvature visible from high altitude",
+        "Ships disappear bottom-first"
+      ],
+      "risk_assessment": "Low - well-established fact",
+      "bias_score": -5,
+      "bias_direction": "neutral",
+      "sources": [
+        {
+          "title": "NASA Earth Sciences",
+          "url": "https://science.nasa.gov/",
+          "credibility": "very-high"
+        },
+        {
+          "title": "International Space Station",
+          "url": "https://www.nasa.gov/iss/",
+          "credibility": "very-high"
+        }
+      ],
+      "sentiment": {
+        "positive": 0,
+        "neutral": 90,
+        "negative": 10
+      },
+      "model_used": "grok-3",
+      "tokens_used": 240,
+      "processing_time_ms": 850,
+      "created_at": "2024-12-18T10:30:00Z"
+    },
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440002",
+      "user_id": "550e8400-e29b-41d4-a716-446655440003",
+      "claim": "Drinking lemon water in the morning has scientifically proven health benefits",
+      "verdict": "neutral",
+      "score": 0.52,
+      "confidence": 65,
+      "mode": "voter",
+      "explanation": "While lemon water has some benefits, the claim overstates scientific evidence. Hydration is beneficial, but the specific benefits are often exaggerated.",
+      "summary": "Some truth with significant exaggeration",
+      "key_points": [
+        "Hydration itself is beneficial",
+        "Vitamin C content is real but modest",
+        "Most claimed detox benefits lack evidence",
+        "Can affect dental enamel if consumed frequently"
+      ],
+      "risk_assessment": "Low - harmless if used moderately",
+      "bias_score": 10,
+      "bias_direction": "right-leaning",
+      "sources": [
+        {
+          "title": "Harvard Health",
+          "url": "https://www.health.harvard.edu/",
+          "credibility": "high"
+        }
+      ],
+      "sentiment": {
+        "positive": 65,
+        "neutral": 30,
+        "negative": 5
+      },
+      "model_used": "grok-3",
+      "tokens_used": 210,
+      "processing_time_ms": 920,
+      "created_at": "2024-12-17T14:15:00Z"
+    },
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440003",
+      "user_id": "550e8400-e29b-41d4-a716-446655440001",
+      "claim": "Renewable energy can meet 100% of global energy needs by 2030",
+      "verdict": "uncertain",
+      "score": 0.48,
+      "confidence": 55,
+      "mode": "professional",
+      "explanation": "While renewable capacity is growing rapidly, 100% by 2030 faces infrastructure and storage challenges. Different sources project 50-80% feasibility.",
+      "summary": "Technologically ambitious but currently uncertain",
+      "key_points": [
+        "Renewable capacity growing exponentially",
+        "Battery storage still developing",
+        "Grid infrastructure needs upgrades",
+        "Varies by region and country",
+        "2050 targets more realistic than 2030"
+      ],
+      "risk_assessment": "Medium - policy implications significant",
+      "bias_score": -25,
+      "bias_direction": "left-leaning",
+      "sources": [
+        {
+          "title": "International Energy Agency",
+          "url": "https://www.iea.org/",
+          "credibility": "very-high"
+        },
+        {
+          "title": "NREL Renewable Energy Studies",
+          "url": "https://www.nrel.gov/",
+          "credibility": "very-high"
+        }
+      ],
+      "sentiment": {
+        "positive": 45,
+        "neutral": 40,
+        "negative": 15
+      },
+      "model_used": "grok-4",
+      "tokens_used": 380,
+      "processing_time_ms": 1240,
+      "created_at": "2024-12-16T09:45:00Z"
+    },
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440004",
+      "user_id": "550e8400-e29b-41d4-a716-446655440004",
+      "claim": "Coffee consumption reduces risk of Parkinson's disease",
+      "verdict": "mostly true",
+      "score": 0.74,
+      "confidence": 78,
+      "mode": "professional",
+      "explanation": "Multiple longitudinal studies show correlation between coffee/caffeine consumption and reduced Parkinson's risk. Effect is modest but consistent.",
+      "summary": "Supported by epidemiological evidence",
+      "key_points": [
+        "Consistent findings across 6+ major studies",
+        "Correlation stronger for unmedicated patients",
+        "Caffeine appears to be the active ingredient",
+        "Effect size: ~30-40% risk reduction",
+        "Causation not definitively proven"
+      ],
+      "risk_assessment": "Low - beneficial side effects",
+      "bias_score": 8,
+      "bias_direction": "neutral",
+      "sources": [
+        {
+          "title": "Neurology Journal - Meta-analysis",
+          "url": "https://neurology.org/",
+          "credibility": "very-high"
+        }
+      ],
+      "sentiment": {
+        "positive": 75,
+        "neutral": 20,
+        "negative": 5
+      },
+      "model_used": "grok-3",
+      "tokens_used": 290,
+      "processing_time_ms": 1050,
+      "created_at": "2024-12-15T16:20:00Z"
+    },
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440005",
+      "user_id": "550e8400-e29b-41d4-a716-446655440002",
+      "claim": "5G networks cause COVID-19",
+      "verdict": "bullshit",
+      "score": 0.99,
+      "confidence": 99,
+      "mode": "professional",
+      "explanation": "COVID-19 is caused by the SARS-CoV-2 virus, definitively identified by genome sequencing. 5G is electromagnetic radiation and cannot transmit viruses.",
+      "summary": "Scientifically impossible",
+      "key_points": [
+        "COVID existed before 5G rollout in most areas",
+        "Virus has been fully sequenced and characterized",
+        "Radio waves don't transmit biological viruses",
+        "Countries without 5G also have COVID",
+        "Spread follows viral transmission patterns, not network coverage"
+      ],
+      "risk_assessment": "High - spreads harmful misinformation",
+      "bias_score": -15,
+      "bias_direction": "neutral",
+      "sources": [
+        {
+          "title": "WHO COVID-19 Origin",
+          "url": "https://www.who.int/",
+          "credibility": "very-high"
+        },
+        {
+          "title": "CDC COVID-19 Information",
+          "url": "https://www.cdc.gov/",
+          "credibility": "very-high"
+        }
+      ],
+      "sentiment": {
+        "positive": 2,
+        "neutral": 15,
+        "negative": 83
+      },
+      "model_used": "grok-3",
+      "tokens_used": 260,
+      "processing_time_ms": 890,
+      "created_at": "2024-12-14T11:30:00Z"
+    }
+  ],
+  "sentiment_history": [
+    {
+      "id": "770e8400-e29b-41d4-a716-446655440001",
+      "user_id": "550e8400-e29b-41d4-a716-446655440003",
+      "topic": "Electric Vehicles",
+      "positive": 245,
+      "neutral": 156,
+      "negative": 89,
+      "explanation": "Social media sentiment about electric vehicles is predominantly positive, with focus on environmental benefits and technological progress.",
+      "summary": "Majority positive sentiment with optimistic outlook",
+      "quotes": [
+        {
+          "text": "Electric vehicles are the future! Finally a sustainable transport option.",
+          "sentiment": "positive",
+          "source": "Twitter"
+        },
+        {
+          "text": "The infrastructure for EV charging is still inadequate in rural areas.",
+          "sentiment": "negative",
+          "source": "Reddit"
+        },
+        {
+          "text": "EV technology continues to improve steadily each year.",
+          "sentiment": "neutral",
+          "source": "News"
+        }
+      ],
+      "sources": [
+        {
+          "platform": "Twitter",
+          "posts_analyzed": 150,
+          "sentiment_breakdown": { "positive": 115, "neutral": 25, "negative": 10 }
+        },
+        {
+          "platform": "Reddit",
+          "posts_analyzed": 200,
+          "sentiment_breakdown": { "positive": 85, "neutral": 90, "negative": 25 }
+        },
+        {
+          "platform": "News",
+          "posts_analyzed": 91,
+          "sentiment_breakdown": { "positive": 45, "neutral": 41, "negative": 5 }
+        }
+      ],
+      "trending_score": 87.5,
+      "model_used": "grok-3",
+      "tokens_used": 450,
+      "created_at": "2024-12-19T13:00:00Z"
+    },
+    {
+      "id": "770e8400-e29b-41d4-a716-446655440002",
+      "user_id": "550e8400-e29b-41d4-a716-446655440001",
+      "topic": "Cryptocurrency Market",
+      "positive": 189,
+      "neutral": 203,
+      "negative": 198,
+      "explanation": "Cryptocurrency sentiment is polarized with volatile emotional responses, reflecting market volatility and ideological divides.",
+      "summary": "Highly polarized with equal negative and positive voices",
+      "quotes": [
+        {
+          "text": "Blockchain technology is revolutionizing finance!",
+          "sentiment": "positive",
+          "source": "Twitter"
+        },
+        {
+          "text": "Crypto is a speculative bubble waiting to burst.",
+          "sentiment": "negative",
+          "source": "Reddit"
+        },
+        {
+          "text": "Bitcoin trading volume increased 15% this week.",
+          "sentiment": "neutral",
+          "source": "News"
+        }
+      ],
+      "sources": [
+        {
+          "platform": "Twitter",
+          "posts_analyzed": 250,
+          "sentiment_breakdown": { "positive": 120, "neutral": 85, "negative": 45 }
+        },
+        {
+          "platform": "Reddit",
+          "posts_analyzed": 200,
+          "sentiment_breakdown": { "positive": 50, "neutral": 85, "negative": 65 }
+        },
+        {
+          "platform": "Finance News",
+          "posts_analyzed": 140,
+          "sentiment_breakdown": { "positive": 19, "neutral": 33, "negative": 88 }
+        }
+      ],
+      "trending_score": 52.3,
+      "model_used": "grok-3",
+      "tokens_used": 520,
+      "created_at": "2024-12-18T10:30:00Z"
+    },
+    {
+      "id": "770e8400-e29b-41d4-a716-446655440003",
+      "user_id": "550e8400-e29b-41d4-a716-446655440004",
+      "topic": "Artificial Intelligence",
+      "positive": 312,
+      "neutral": 178,
+      "negative": 110,
+      "explanation": "AI sentiment is predominantly positive with excitement about capabilities, mixed with concerns about employment and ethical implications.",
+      "summary": "Optimistic with significant cautionary voices",
+      "quotes": [
+        {
+          "text": "AI is accelerating scientific breakthroughs across all fields!",
+          "sentiment": "positive",
+          "source": "Twitter"
+        },
+        {
+          "text": "I'm worried about job displacement from AI automation.",
+          "sentiment": "negative",
+          "source": "Reddit"
+        },
+        {
+          "text": "New AI model achieves state-of-the-art performance.",
+          "sentiment": "neutral",
+          "source": "News"
+        }
+      ],
+      "sources": [
+        {
+          "platform": "Twitter",
+          "posts_analyzed": 300,
+          "sentiment_breakdown": { "positive": 210, "neutral": 70, "negative": 20 }
+        },
+        {
+          "platform": "Reddit",
+          "posts_analyzed": 200,
+          "sentiment_breakdown": { "positive": 70, "neutral": 70, "negative": 60 }
+        },
+        {
+          "platform": "Tech News",
+          "posts_analyzed": 100,
+          "sentiment_breakdown": { "positive": 32, "neutral": 38, "negative": 30 }
+        }
+      ],
+      "trending_score": 73.8,
+      "model_used": "grok-4",
+      "tokens_used": 680,
+      "created_at": "2024-12-17T15:45:00Z"
+    }
+  ],
+  "system_settings": [
+    {
+      "key": "maintenance_mode",
+      "value": false,
+      "description": "Enable maintenance mode",
+      "is_public": false
+    },
+    {
+      "key": "max_free_validations_daily",
+      "value": 50,
+      "description": "Maximum validations for free users per day",
+      "is_public": false
+    },
+    {
+      "key": "max_pro_validations_daily",
+      "value": 500,
+      "description": "Maximum validations for professional users per day",
+      "is_public": false
+    },
+    {
+      "key": "default_model",
+      "value": "grok-3",
+      "description": "Default AI model for analysis",
+      "is_public": true
+    },
+    {
+      "key": "available_models",
+      "value": [
+        "grok-3",
+        "grok-4",
+        "gpt-4o",
+        "claude-3-5-sonnet-20241022"
+      ],
+      "description": "List of available AI models",
+      "is_public": true
+    },
+    {
+      "key": "app_version",
+      "value": "2.0.1",
+      "description": "Current app version",
+      "is_public": true
+    },
+    {
+      "key": "api_rate_limit",
+      "value": 100,
+      "description": "API requests per minute per user",
+      "is_public": false
+    }
+  ]
+}
