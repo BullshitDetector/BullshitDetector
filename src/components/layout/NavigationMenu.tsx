@@ -1,6 +1,6 @@
 // src/components/layout/NavigationMenu.tsx
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, BarChart3, History, Settings, User, Search, Menu, X, ChevronDown, LogOut, Shield } from 'lucide-react';
+import { Home, BarChart3, History, Settings, User, Search, Menu, X, ChevronDown, LogOut, Shield, Info } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -20,11 +20,12 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Home', path: '/', icon: <Home className="w-5 h-5" /> },
-  { 
-    label: 'Analyzer', 
-    path: '/analyzer', 
-    icon: <BarChart3 className="w-5 h-5" />, 
-    protected: true 
+  { label: 'About', path: '/about', icon: <Info className="w-5 h-5" /> },
+  {
+    label: 'Analyzer',
+    path: '/analyzer',
+    icon: <BarChart3 className="w-5 h-5" />,
+    protected: true
   },
   { 
     label: 'Sentiment', 
