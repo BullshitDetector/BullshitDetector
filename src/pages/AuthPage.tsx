@@ -3,8 +3,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import toast from 'react-hot-toast';
 
 const ADMIN_EMAIL = 'admin@bullshitdetector.com';
+const DEMO_OTP = '123456';
 
 export default function AuthPage() {
   const [email, setEmail] = useState(ADMIN_EMAIL);
@@ -12,6 +14,7 @@ export default function AuthPage() {
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isDemo, setIsDemo] = useState(false);
   const { signIn } = useAuth(); // Not used for OTP, but for consistency
   const navigate = useNavigate();
 
@@ -23,14 +26,9 @@ export default function AuthPage() {
     setLoading(true);
     setError('');
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
-      });
-      if (error) throw error;
+      setIsDemo(true);
       setStep('otp');
+      toast.success(`Demo OTP: ${DEMO_OTP}`);
     } catch (err: any) {
       setError(err.message || 'Failed to send OTP. Try again.');
     } finally {
@@ -42,6 +40,15 @@ export default function AuthPage() {
     setLoading(true);
     setError('');
     try {
+      if (isDemo) {
+        if (otp !== DEMO_OTP) {
+          throw new Error('Invalid demo OTP. Use 123456');
+        }
+        localStorage.setItem('demoMode', 'true');
+        navigate('/');
+        return;
+      }
+
       const { data, error } = await supabase.auth.verifyOtp({
         email,
         token: otp,
@@ -82,7 +89,9 @@ export default function AuthPage() {
           </>
         ) : (
           <>
-            <p className="text-sm text-gray-600 mb-4">Check your email for the OTP code.</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              {isDemo ? `Demo OTP: ${DEMO_OTP}` : 'Check your email for the OTP code.'}
+            </p>
             <input
               type="text"
               placeholder="Enter OTP"

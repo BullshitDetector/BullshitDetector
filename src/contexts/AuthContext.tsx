@@ -34,27 +34,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        fetchProfile(session.user);
-      } else {
+    const initAuth = async () => {
+      const demoMode = localStorage.getItem('demoMode') === 'true';
+
+      if (demoMode) {
+        setUser({
+          id: 'demo-user-id',
+          email: 'admin@bullshitdetector.com',
+          email_confirmed_at: new Date().toISOString(),
+          phone: '',
+          confirmed_at: new Date().toISOString(),
+          last_sign_in_at: new Date().toISOString(),
+          app_metadata: {},
+          user_metadata: {},
+          identities: [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          is_anonymous: false,
+          profile: {
+            user_id: 'demo-user-id',
+            email: 'admin@bullshitdetector.com',
+            role: 'admin',
+            mode: 'professional',
+            created_at: new Date().toISOString(),
+          },
+        });
         setLoading(false);
+        return;
       }
-    });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      if (session?.user) {
-        await fetchProfile(session.user);
-      } else {
-        setUser(null);
-      }
-    });
+      // Check initial session
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session);
+        if (session?.user) {
+          fetchProfile(session.user);
+        } else {
+          setLoading(false);
+        }
+      });
 
-    return () => subscription.unsubscribe();
+      // Listen for auth changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        setSession(session);
+        if (session?.user) {
+          await fetchProfile(session.user);
+        } else {
+          setUser(null);
+        }
+      });
+
+      return () => subscription.unsubscribe();
+    };
+
+    initAuth();
   }, []);
 
   const fetchProfile = async (supabaseUser: SupabaseUser) => {
@@ -106,8 +138,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    localStorage.removeItem('demoMode');
     const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    if (error && error.message !== 'session_not_found') throw error;
     setUser(null);
     setSession(null);
   };
