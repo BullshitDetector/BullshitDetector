@@ -84,6 +84,24 @@ Open [http://localhost:5173](http://localhost:5173)
 
 ---
 
+## Admin Demo Login
+
+For development and testing, a demo admin account is available:
+
+- **Email**: `admin@bullshitdetector.com`
+- **Demo OTP**: `123456`
+
+**How to use:**
+1. Click **Admin Login** on the home page
+2. The email is pre-filled with the admin account
+3. Click **Send OTP** → Shows demo OTP code (no email needed)
+4. Enter `123456` in the OTP field
+5. Click **Verify OTP** → You're logged in as admin
+
+This demo account provides full access to admin features without requiring email infrastructure setup during development.
+
+---
+
 ## Supabase Setup
 
 ### 1. Create Table (SQL Editor)
