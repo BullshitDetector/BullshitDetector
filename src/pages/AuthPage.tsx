@@ -45,7 +45,7 @@ export default function AuthPage() {
           throw new Error('Invalid demo OTP. Use 123456');
         }
         localStorage.setItem('demoMode', 'true');
-        navigate('/');
+        navigate('/analyzer');
         return;
       }
 
@@ -56,7 +56,7 @@ export default function AuthPage() {
       });
       if (error) throw error;
       if (data.user) {
-        navigate('/');
+        navigate('/analyzer');
       }
     } catch (err: any) {
       setError(err.message || 'Invalid OTP. Try again.');
